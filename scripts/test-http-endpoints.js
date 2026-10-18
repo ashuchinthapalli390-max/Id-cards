@@ -25,27 +25,41 @@ async function main() {
     console.log('  ✓ Verified: Admin login page rendered with role warnings.');
   }
 
-  // 3. Admin Authentication API
-  console.log('\n[TEST 3] Testing Admin Login API POST /api/admin/login with Founder credentials...');
-  const loginApiRes = await fetch(`${baseUrl}/api/admin/login`, {
+  // 3. Admin Authentication API via Master Key
+  console.log('\n[TEST 3] Testing Admin Master Key Login POST /api/admin/login...');
+  const masterLoginRes = await fetch(`${baseUrl}/api/admin/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      usernameOrEmail: 'ashu',
-      password: 'CxA!AshuFounder2026'
+      masterKey: 'CodeXa@2026#MasterAdminKey'
     })
   });
-  console.log(`  ✓ Status: ${loginApiRes.status} ${loginApiRes.statusText}`);
-  const loginData = await loginApiRes.json();
-  console.log(`  ✓ User authenticated: ${loginData.user?.fullName} (${loginData.user?.effectiveRole})`);
+  console.log(`  ✓ Master Key Status: ${masterLoginRes.status} ${masterLoginRes.statusText}`);
+  const masterData = await masterLoginRes.json();
+  if (!masterLoginRes.ok || !masterData.success) {
+    throw new Error(`Master key login failed: ${masterData.error}`);
+  }
+  console.log(`  ✓ Authenticated via Master Key: ${masterData.user?.fullName} (${masterData.user?.effectiveRole})`);
 
   // Extract session cookie
-  const setCookie = loginApiRes.headers.get('set-cookie');
+  const setCookie = masterLoginRes.headers.get('set-cookie');
   if (!setCookie || !setCookie.includes('cxa_id_session')) {
     throw new Error('Expected cxa_id_session cookie in response!');
   }
   const sessionCookie = setCookie.split(';')[0];
   console.log(`  ✓ Acquired secure HttpOnly session cookie: ${sessionCookie.slice(0, 30)}...`);
+
+  // Verify invalid master key rejection
+  const badMasterRes = await fetch(`${baseUrl}/api/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ masterKey: 'InvalidBadKey123' })
+  });
+  if (badMasterRes.status === 401) {
+    console.log('  ✓ Verified: Invalid Master Key correctly rejected with 401 Unauthorized.');
+  } else {
+    throw new Error(`Expected 401 for invalid master key, got ${badMasterRes.status}`);
+  }
 
   // 4. Admin Live Stats API
   console.log('\n[TEST 4] Testing Admin Stats API GET /api/admin/stats ...');

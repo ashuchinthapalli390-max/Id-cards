@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   authenticateAdminCredentials,
+  authenticateMasterKey,
+  isValidMasterKey,
   createAdminSession,
   SESSION_COOKIE_NAME,
   SESSION_MAX_AGE_SECONDS,
@@ -12,20 +14,32 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { usernameOrEmail, password } = body;
+    const { masterKey, usernameOrEmail, password } = body;
 
-    if (!usernameOrEmail || !password) {
+    let authResult: { user: any; error?: string };
+
+    // 1. Single Master Key login (Direct or password fallback)
+    const candidateKey = (masterKey || (password && isValidMasterKey(password) ? password : null) || (!usernameOrEmail && password ? password : null))?.trim();
+
+    if (candidateKey && isValidMasterKey(candidateKey)) {
+      authResult = await authenticateMasterKey(candidateKey);
+    } else if (usernameOrEmail && password) {
+      // 2. Standard credentials check
+      authResult = await authenticateAdminCredentials(usernameOrEmail, password);
+    } else if (masterKey) {
+      authResult = await authenticateMasterKey(masterKey);
+    } else {
       return NextResponse.json(
-        { success: false, error: "Username/email and password are required." },
+        { success: false, error: "Please enter your Administrator Master Key." },
         { status: 400 }
       );
     }
 
-    const { user, error } = await authenticateAdminCredentials(usernameOrEmail, password);
+    const { user, error } = authResult;
 
     if (error || !user) {
       return NextResponse.json(
-        { success: false, error: error || "Invalid credentials." },
+        { success: false, error: error || "Authentication failed. Invalid Master Key." },
         { status: 401 }
       );
     }
@@ -43,7 +57,11 @@ export async function POST(request: NextRequest) {
       actorRole: user.effectiveRole,
       actorType: "ADMIN",
       action: "ADMIN_LOGIN",
-      details: { email: user.email, role: user.role, orgRole: user.orgRole },
+      details: {
+        method: candidateKey && isValidMasterKey(candidateKey) ? "MASTER_KEY" : "CREDENTIALS",
+        role: user.role,
+        effectiveRole: user.effectiveRole,
+      },
       req: request,
     });
 

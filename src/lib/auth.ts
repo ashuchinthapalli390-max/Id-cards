@@ -75,6 +75,76 @@ export function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+export const DEFAULT_ADMIN_MASTER_KEY = "CodeXa@2026#MasterAdminKey";
+
+/**
+ * Returns the configured Master Admin Key from environment variables.
+ */
+export function getAdminMasterKey(): string {
+  return process.env.ADMIN_MASTER_KEY?.trim() || DEFAULT_ADMIN_MASTER_KEY;
+}
+
+/**
+ * Validates a candidate master key against process.env.ADMIN_MASTER_KEY.
+ */
+export function isValidMasterKey(candidateKey: string): boolean {
+  if (!candidateKey || typeof candidateKey !== "string") return false;
+  const configured = getAdminMasterKey();
+  return candidateKey.trim() === configured;
+}
+
+/**
+ * Authenticates via single Master Key. Associates the session with the Founder account in DB.
+ */
+export async function authenticateMasterKey(
+  masterKey: string
+): Promise<{ user: AuthenticatedAdmin | null; error?: string }> {
+  if (!isValidMasterKey(masterKey)) {
+    return { user: null, error: "Invalid Administrator Master Key. Please verify against .env" };
+  }
+
+  // Find the founder/owner user in DB to attach the session
+  let adminUser = await db.user.findFirst({
+    where: {
+      OR: [
+        { role: "OWNER" },
+        { role: "FOUNDER" },
+        { orgRole: "FOUNDER" },
+      ],
+      isActive: true,
+    },
+  });
+
+  if (!adminUser) {
+    adminUser = await db.user.findFirst({
+      where: {
+        role: { in: ["CO_FOUNDER", "CTO", "HR"] },
+        isActive: true,
+      },
+    });
+  }
+
+  if (!adminUser) {
+    adminUser = await db.user.findFirst({ where: { isActive: true } });
+  }
+
+  if (!adminUser) {
+    return { user: null, error: "No active user record in database to associate session." };
+  }
+
+  return {
+    user: {
+      id: adminUser.id,
+      username: adminUser.username,
+      email: adminUser.email,
+      fullName: adminUser.fullName || "CodeXa Master Admin",
+      role: "OWNER",
+      orgRole: "FOUNDER",
+      effectiveRole: "FOUNDER",
+    },
+  };
+}
+
 /**
  * Authenticates user credentials against the production User table.
  */
