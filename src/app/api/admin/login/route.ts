@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       authResult = await authenticateMasterKey(masterKey);
     } else {
       return NextResponse.json(
-        { success: false, error: "Please enter your Administrator Master Key." },
+        { success: false, error: "Please enter your Administrator Access Key." },
         { status: 400 }
       );
     }
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     if (error || !user) {
       return NextResponse.json(
-        { success: false, error: error || "Authentication failed. Invalid Master Key." },
+        { success: false, error: error || "Authentication failed. Invalid Access Key." },
         { status: 401 }
       );
     }
