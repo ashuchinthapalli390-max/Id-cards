@@ -2,12 +2,16 @@
   "name": "codexa-id-cards",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.18.0 <=22.x"
+  },
   "scripts": {
     "dev": "next dev -p 3005",
     "build": "prisma generate && next build",
     "start": "next start -p 3005",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
+    "postinstall": "prisma generate",
     "db:migrate": "node --env-file=.env scripts/migrate-id-cards.js"
   },
   "dependencies": {
@@ -37,5 +41,16 @@
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3"
+  },
+  "overrides": {
+    "glob": "^11.0.0"
+  },
+  "allowScripts": {
+    "@prisma/client": true,
+    "@prisma/engines": true,
+    "prisma": true,
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "prisma@5.22.0": true
   }
 }
