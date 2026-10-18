@@ -31,7 +31,7 @@ async function main() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      masterKey: 'CodeXa@2026#MasterAdminKey'
+      masterKey: '161703'
     })
   });
   console.log(`  ✓ Master Key Status: ${masterLoginRes.status} ${masterLoginRes.statusText}`);
