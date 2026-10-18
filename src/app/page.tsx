@@ -106,7 +106,7 @@ export default function HomePage() {
 
         {/* Token Access Card */}
         <div className="cyber-card max-w-2xl mx-auto w-full mb-12 shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-[rgba(217,4,41,0.3)]">
-          <div className="flex items-start gap-4 mb-6">
+          <div className="flex items-start gap-4 mb-5">
             <div className="w-12 h-12 rounded-xl bg-[rgba(217,4,41,0.15)] border border-[rgba(255,30,60,0.4)] flex items-center justify-center text-[#FF1E3C] shrink-0 shadow-[0_0_15px_rgba(255,30,60,0.25)]">
               <Camera className="w-6 h-6" />
             </div>
@@ -118,6 +118,17 @@ export default function HomePage() {
                 Paste your secure link or token sent by CodeXa Agency HR to access your verified profile.
               </p>
             </div>
+          </div>
+
+          {/* Validity Extension Notice */}
+          <div className="bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.3)] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]" />
+              <span className="text-xs font-semibold text-[#10B981]">Portal Active & Ready for Photo Uploads</span>
+            </div>
+            <span className="text-[11px] font-mono text-[#A5A5A5]">
+              Validity Extended: <span className="text-white font-semibold">19th October 2026 (Active)</span>
+            </span>
           </div>
 
           <form onSubmit={handleOpenLink} className="space-y-4">

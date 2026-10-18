@@ -296,9 +296,9 @@ export default function InternUploadPage() {
           </p>
 
           <div className="bg-[#141414] border border-[rgba(217,4,41,0.2)] rounded-xl p-4 text-left text-xs space-y-2 mb-6 text-[#A5A5A5]">
-            <p>• Make sure you opened the exact personal link provided by CodeXa Agency.</p>
-            <p>• Personalized upload links expire after 7 days for strict security.</p>
-            <p>• If expired or revoked, your administrator can generate a fresh link.</p>
+            <p>• Make sure you opened your direct personalized link provided by CodeXa Agency.</p>
+            <p>• ID Photo Submission validity is active through October 19, 2026.</p>
+            <p>• If you need assistance, please contact your CodeXa mentor or administrator.</p>
           </div>
 
           <button
@@ -358,7 +358,7 @@ export default function InternUploadPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-xs bg-[#141414] border border-[rgba(217,4,41,0.15)] rounded-xl p-3.5">
+          <div className="grid grid-cols-2 gap-2 text-xs bg-[#141414] border border-[rgba(217,4,41,0.15)] rounded-xl p-3.5 mb-3">
             <div>
               <span className="text-[10px] text-[#A5A5A5] uppercase tracking-wider block">Department</span>
               <span className="font-semibold text-white">{intern.department || "Engineering"}</span>
@@ -367,6 +367,17 @@ export default function InternUploadPage() {
               <span className="text-[10px] text-[#A5A5A5] uppercase tracking-wider block">Institution</span>
               <span className="font-semibold text-white truncate block">{intern.college || "CodeXa Tech Hub"}</span>
             </div>
+          </div>
+
+          {/* Active Validity Window Notice */}
+          <div className="bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.25)] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]" />
+              <span className="text-xs font-semibold text-[#10B981]">Submission Window Active</span>
+            </div>
+            <span className="text-[11px] font-medium text-[#A5A5A5]">
+              Validity Extended: <span className="text-white font-semibold">19th October 2026</span>
+            </span>
           </div>
         </div>
 

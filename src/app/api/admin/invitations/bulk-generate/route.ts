@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       isNew: boolean;
     }> = [];
 
-    const expiresAt = calculateExpiryDate(expiryDays);
+    const expiresAt = calculateExpiryDate(Math.max(expiryDays, 30));
 
     for (const intern of interns) {
       const ep = intern.employmentProfile;
@@ -77,14 +77,6 @@ export async function POST(request: NextRequest) {
       if (existingActive && !forceRegenerate) {
         // Active invitation already exists, skip to preserve idempotency
         continue;
-      }
-
-      // Revoke any previous active invitations if force regenerating
-      if (existingActive) {
-        await db.idCardInvitation.updateMany({
-          where: { userId: intern.id, status: "ACTIVE" },
-          data: { status: "REVOKED", revokedAt: now, revokedBy: admin.id },
-        });
       }
 
       // Generate secure token

@@ -58,14 +58,8 @@ async function main() {
     const rawToken = generateSecureToken();
     const tokenHash = hashToken(rawToken);
 
-    // Invalidate any older invitations
-    await prisma.idCardInvitation.updateMany({
-      where: { userId: intern.id, status: 'ACTIVE' },
-      data: { status: 'REVOKED', revokedAt: now }
-    });
-
-    // Create new active invitation in DB
-    activeInvitation = await prisma.idCardInvitation.create({
+    // Create new active invitation in DB without revoking older invitations
+    await prisma.idCardInvitation.create({
       data: {
         userId: intern.id,
         tokenHash,

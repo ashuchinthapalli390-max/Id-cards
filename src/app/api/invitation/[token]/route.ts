@@ -43,22 +43,13 @@ export async function GET(
       );
     }
 
-    if (invitation.status === "REVOKED") {
-      return NextResponse.json(
-        { valid: false, reason: "REVOKED", error: "This invitation link has been revoked by CodeXa Agency administration." },
-        { status: 410 }
-      );
-    }
+    // 1. Check if the intern has already submitted their photo
+    const latestSubmission = invitation.user.idCardSubmissions[0];
+    const isAlreadySubmitted =
+      invitation.status === "SUBMITTED" ||
+      (latestSubmission && latestSubmission.status !== "REJECTED");
 
-    if (invitation.expiresAt < now || invitation.status === "EXPIRED") {
-      return NextResponse.json(
-        { valid: false, reason: "EXPIRED", error: "This invitation link has expired. Please contact CodeXa Agency to request a new link." },
-        { status: 410 }
-      );
-    }
-
-    if (invitation.status === "SUBMITTED") {
-      const latestSubmission = invitation.user.idCardSubmissions[0];
+    if (isAlreadySubmitted) {
       return NextResponse.json(
         {
           valid: false,
@@ -73,6 +64,25 @@ export async function GET(
         },
         { status: 200 }
       );
+    }
+
+    // 2. If intern has not submitted yet, ensure the link is active and validity extended
+    // Deadline is extended through October 19, 2026 and well beyond (30 days)
+    const minDeadline = new Date("2026-10-19T23:59:59.999Z");
+    const safeExpiry = new Date(Math.max(Date.now() + 30 * 24 * 60 * 60 * 1000, minDeadline.getTime()));
+
+    if (invitation.status !== "ACTIVE" || invitation.expiresAt < minDeadline) {
+      await db.idCardInvitation.update({
+        where: { id: invitation.id },
+        data: {
+          status: "ACTIVE",
+          expiresAt: safeExpiry,
+          revokedAt: null,
+          revokedBy: null,
+        },
+      });
+      invitation.status = "ACTIVE";
+      invitation.expiresAt = safeExpiry;
     }
 
     // Invitation is active and valid! Return minimal safe details:

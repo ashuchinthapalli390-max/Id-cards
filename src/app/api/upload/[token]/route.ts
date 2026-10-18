@@ -48,21 +48,13 @@ export async function POST(
       );
     }
 
-    if (invitation.status === "REVOKED") {
-      return NextResponse.json(
-        { success: false, error: "This invitation link was revoked by administration." },
-        { status: 410 }
-      );
-    }
+    // 1. Check if the intern has already submitted their photograph
+    const latestSubmission = invitation.user.idCardSubmissions[0];
+    const isAlreadySubmitted =
+      invitation.status === "SUBMITTED" ||
+      (latestSubmission && latestSubmission.status !== "REJECTED");
 
-    if (invitation.expiresAt < now || invitation.status === "EXPIRED") {
-      return NextResponse.json(
-        { success: false, error: "This invitation link has expired." },
-        { status: 410 }
-      );
-    }
-
-    if (invitation.status === "SUBMITTED") {
+    if (isAlreadySubmitted) {
       return NextResponse.json(
         {
           success: false,

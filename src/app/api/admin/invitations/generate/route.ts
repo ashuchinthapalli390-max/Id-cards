@@ -47,25 +47,11 @@ export async function POST(request: NextRequest) {
     const employeeId =
       intern.employmentProfile?.employeeId || `CXA-INT-${intern.id.slice(-4)}`;
 
-    // If active invitations exist and regenerate was requested, revoke older ones
-    if (intern.idCardInvitations.length > 0) {
-      await db.idCardInvitation.updateMany({
-        where: {
-          userId: intern.id,
-          status: "ACTIVE",
-        },
-        data: {
-          status: "REVOKED",
-          revokedAt: new Date(),
-          revokedBy: admin.id,
-        },
-      });
-    }
-
+    const effectiveExpiryDays = Math.max(expiryDays, 30);
     // Generate new 256-bit cryptographically secure token
     const rawToken = generateSecureToken();
     const tokenHash = hashToken(rawToken);
-    const expiresAt = calculateExpiryDate(expiryDays);
+    const expiresAt = calculateExpiryDate(effectiveExpiryDays);
 
     const invitation = await db.idCardInvitation.create({
       data: {
