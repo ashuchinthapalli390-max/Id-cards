@@ -1,0 +1,182 @@
+// Prisma schema for CodeXa Agency — Intern ID Card Portal
+// Connected to Supabase PostgreSQL (Source of Truth)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── USER ACCOUNTS (EXISTING AUTHORITATIVE TABLE) ───────────────────────────
+model User {
+  id                   String    @id @default(cuid())
+  firebaseUid          String?   @unique
+  username             String    @unique
+  email                String    @unique
+  fullName             String?
+  passwordHash         String
+  role                 String    @default("EMPLOYEE") // "FOUNDER" | "CO_FOUNDER" | "CEO" | "CTO" | "HR" | "COO" | "EMPLOYEE" | "INTERN" | "OWNER" | "ADMIN"
+  orgRole              String?   // "FOUNDER" | "CO_FOUNDER" | "CEO" | "CTO" | "HR" | "COO" | "EMPLOYEE" | "INTERN"
+  department           String?
+  isActive             Boolean   @default(true)
+  lastLoginAt          DateTime?
+  profileMediaUrl      String?
+  profileMediaMimeType String?
+  cropX                Float?    @default(0)
+  cropY                Float?    @default(0)
+  zoom                 Float?    @default(1)
+  objectPosition       String?   @default("center")
+  mustChangePassword   Boolean   @default(false)
+  phone                String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  employmentProfile   EmploymentProfile?
+  sessions            Session[]
+  idCardInvitations   IdCardInvitation[]
+  idCardSubmissions   IdCardPhotoSubmission[]
+}
+
+// ─── EMPLOYMENT PROFILE (EXISTING INTERN DETAILS) ────────────────────────────
+model EmploymentProfile {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  employeeId         String    @unique // e.g. "CXA-INT-2026-001"
+  employmentType     String    @default("INTERN")
+  workforceType      String?
+  department         String    @default("Engineering")
+  designation        String    @default("Intern")
+  reportingTo        String?
+  joiningDate        DateTime  @default(now())
+  endDate            DateTime?
+  status             String    @default("ACTIVE")
+  salaryCycle        String    @default("MONTHLY")
+  basicSalary        Float?
+  allowance          Float?
+  stipend            Float?
+  bonus              Float?
+  deductions         Float?
+  mentorName         String?
+  internshipDuration String?
+  internshipDomain   String?
+  internshipDurationMonths Int?
+  internshipStartDate DateTime?
+  internshipEndDate   DateTime?
+  college            String?
+  collegeLocation    String?
+  yearOfStudy        String?
+  academicBranch     String?
+  referenceNumber    String?
+  phone              String?
+  bankAccountMasked  String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([status])
+}
+
+// ─── SESSION STORE (SHARED / PERSISTENT SESSION) ─────────────────────────────
+model Session {
+  id               String    @id @default(cuid())
+  userId           String
+  sessionTokenHash String    @unique
+  expiresAt        DateTime
+  lastSeenAt       DateTime? @default(now())
+  revokedAt        DateTime?
+  userAgent        String?
+  ipHash           String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── ID CARD INVITATIONS ─────────────────────────────────────────────────────
+model IdCardInvitation {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  tokenHash       String    @unique @map("token_hash")
+  status          String    @default("ACTIVE") @map("status") // 'ACTIVE' | 'SUBMITTED' | 'EXPIRED' | 'REVOKED'
+  expiresAt       DateTime  @map("expires_at")
+  createdBy       String?   @map("created_by")
+  createdByName   String?   @map("created_by_name")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  submittedAt     DateTime? @map("submitted_at")
+  revokedAt       DateTime? @map("revoked_at")
+  revokedBy       String?   @map("revoked_by")
+  emailSentAt     DateTime? @map("email_sent_at")
+  emailStatus     String    @default("NOT_SENT") @map("email_status") // 'NOT_SENT' | 'SENT' | 'FAILED'
+  emailError      String?   @map("email_error")
+  reminderSentAt  DateTime? @map("reminder_sent_at")
+  reminderCount   Int       @default(0) @map("reminder_count")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("id_card_invitations")
+}
+
+// ─── ID CARD PHOTO SUBMISSIONS ───────────────────────────────────────────────
+model IdCardPhotoSubmission {
+  id               String    @id
+  userId           String    @map("user_id")
+  paymentRequestId String?   @map("payment_request_id")
+  invitationId     String?   @map("invitation_id")
+  storagePath      String    @map("storage_path")
+  imageUrl         String    @map("image_url")
+  mimeType         String?   @default("image/jpeg") @map("mime_type")
+  fileSize         Int?      @map("file_size")
+  version          Int       @default(1)
+  status           String    @default("SUBMITTED") // 'SUBMITTED' | 'APPROVED' | 'REJECTED'
+  rejectionReason  String?   @map("rejection_reason")
+  reviewedBy       String?   @map("reviewed_by")
+  reviewedByName   String?   @map("reviewed_by_name")
+  reviewedAt       DateTime? @map("reviewed_at")
+  submittedAt      DateTime  @default(now()) @map("submitted_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at")
+  originalFilename String?   @map("original_filename")
+  width            Int?      @map("width")
+  height           Int?      @map("height")
+  storageBucket    String?   @default("id-card-photos") @map("storage_bucket")
+  sha256Hash       String?   @map("sha256_hash")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([submittedAt])
+  @@map("id_card_photo_submissions")
+}
+
+// ─── ID CARD AUDIT LOGS ──────────────────────────────────────────────────────
+model IdCardAuditLog {
+  id               String   @id @default(cuid())
+  actorId          String?  @map("actor_id")
+  actorName        String?  @map("actor_name")
+  actorRole        String?  @map("actor_role")
+  actorType        String   @default("ADMIN") @map("actor_type") // 'ADMIN' | 'INTERN' | 'SYSTEM'
+  action           String   @map("action")
+  targetInternId   String?  @map("target_intern_id")
+  targetInternName String?  @map("target_intern_name")
+  details          Json?    @map("details")
+  ipAddress        String?  @map("ip_address")
+  userAgent        String?  @map("user_agent")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([actorId])
+  @@index([action])
+  @@index([targetInternId])
+  @@index([createdAt])
+  @@map("id_card_audit_logs")
+}

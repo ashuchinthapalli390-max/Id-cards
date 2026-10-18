@@ -1,0 +1,39 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Production and build outputs
+/.next/
+/out/
+/build
+/dist
+
+# Environment variables & secrets (CRITICAL: DO NOT COMMIT REAL CREDENTIALS)
+.env
+.env*.local
+!.env.example
+*.pem
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js telemetry & cache
+.next/cache/
+
+# System Files
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

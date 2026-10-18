@@ -1,0 +1,42 @@
+{
+  "brand": "CodeXa Agency",
+  "tagline": "Autonomous Agentic Systems & Next-Gen Engineering",
+  "palette": {
+    "background": "#070707",
+    "card": "#0C0C0C",
+    "secondaryDark": "#141414",
+    "crimson": "#D90429",
+    "brightRed": "#FF1E3C",
+    "deepRed": "#63000F",
+    "white": "#F7F7F7",
+    "secondaryText": "#A5A5A5",
+    "borderMuted": "rgba(217, 4, 41, 0.2)",
+    "borderBright": "rgba(255, 30, 60, 0.5)",
+    "glowShadow": "0 0 25px rgba(255, 30, 60, 0.35)",
+    "success": "#10B981"
+  },
+  "typography": {
+    "headingFont": "'Orbitron', sans-serif",
+    "bodyFont": "'Inter', sans-serif",
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700,
+      "black": 900
+    }
+  },
+  "visualStyles": {
+    "cyberGrid": "linear-gradient(to right, rgba(217, 4, 41, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(217, 4, 41, 0.05) 1px, transparent 1px)",
+    "glassmorphism": {
+      "background": "rgba(12, 12, 12, 0.75)",
+      "backdropFilter": "blur(14px)",
+      "border": "1px solid rgba(217, 4, 41, 0.2)"
+    },
+    "borderRadius": {
+      "badge": "9999px",
+      "card": "1.25rem",
+      "button": "0.625rem"
+    }
+  }
+}

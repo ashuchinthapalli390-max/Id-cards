@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeXa Agency — Autonomous Engineering & Cyber Platform</title>
+  <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+  <!-- CodeXa Cyber Theme CSS -->
+  <link rel="stylesheet" href="../css/codexa-theme.css">
+  <style>
+    /* Page specific refinements */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 18px 0;
+      border-bottom: 1px solid rgba(217, 4, 41, 0.15);
+    }
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: #FFFFFF;
+    }
+    .brand-logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--border-bright);
+      object-fit: cover;
+      box-shadow: 0 0 14px rgba(255, 30, 60, 0.3);
+    }
+    .brand-logo span {
+      color: var(--bright-red);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--secondary-text);
+    }
+    .nav-links a:hover {
+      color: var(--bright-red);
+    }
+    
+    /* Hero Section */
+    .hero-section {
+      padding: 90px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+    .hero-headline {
+      font-size: clamp(32px, 5.5vw, 62px);
+      font-weight: 900;
+      margin: 24px auto 18px;
+      max-width: 950px;
+      text-transform: uppercase;
+      line-height: 1.15;
+    }
+    .hero-subtext {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--secondary-text);
+      max-width: 700px;
+      margin: 0 auto 36px;
+      line-height: 1.7;
+    }
+    .hero-cta-group {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 60px;
+    }
+
+    /* Hero Showcase Frame */
+    .hero-image-frame {
+      max-width: 980px;
+      margin: 0 auto;
+      border-radius: var(--radius-lg);
+      padding: 10px;
+      background: rgba(14, 14, 14, 0.7);
+      border: 1px solid rgba(217, 4, 41, 0.35);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(217, 4, 41, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-image-frame img {
+      width: 100%;
+      height: auto;
+      max-height: 480px;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+      display: block;
+    }
+
+    /* Section Styling */
+    .section-title-wrap {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .section-title {
+      font-size: 32px;
+      margin-top: 12px;
+      text-transform: uppercase;
+    }
+    .section-desc {
+      color: var(--secondary-text);
+      font-size: 15px;
+      margin-top: 8px;
+    }
+
+    /* Stats Banner */
+    .stats-strip {
+      margin: 70px 0;
+      padding: 36px;
+      border-radius: var(--radius-lg);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      text-align: center;
+    }
+    .stat-number {
+      font-family: var(--font-heading);
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--bright-red);
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+    .stat-label {
+      color: var(--secondary-text);
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Team Showcase */
+    .team-card {
+      text-align: center;
+      background: var(--card);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: all 0.3s ease;
+    }
+    .team-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-4px);
+    }
+    .team-avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      border: 2px solid var(--crimson);
+      object-fit: cover;
+      box-shadow: 0 0 15px rgba(217, 4, 41, 0.3);
+    }
+    .team-name {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .team-role {
+      font-size: 12px;
+      color: var(--bright-red);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid rgba(217, 4, 41, 0.2);
+      padding: 40px 0;
+      margin-top: 80px;
+      background: #040404;
+      font-size: 13px;
+      color: var(--muted-text);
+    }
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--success);
+      font-weight: 500;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body class="bg-cyber-grid">
+
+  <!-- Ambient Backdrop Glow -->
+  <div class="ambient-glow glow-top"></div>
+
+  <!-- Header / Navigation -->
+  <header class="glass-panel-heavy">
+    <div class="container nav-container">
+      <a href="#" class="brand-logo">
+        <img src="../images/logo.jpeg" alt="CodeXa Logo">
+        <span>CODEXA</span> AGENCY
+      </a>
+      <ul class="nav-links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#ecosystem">Ecosystem</a></li>
+        <li><a href="#team">Leadership</a></li>
+        <li><a href="#internships">Internships</a></li>
+      </ul>
+      <a href="https://codxa-agency.online/login" class="btn btn-cyber-primary" style="padding: 9px 20px; font-size: 12px;">
+        Portal Sign In
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="cyber-badge">
+        <span class="badge-dot"></span>
+        Enterprise Cyber Platform &bull; Active Ecosystem
+      </div>
+
+      <h1 class="hero-headline">
+        ARCHITECTING <span class="text-neon-glow" style="color: var(--bright-red);">AUTONOMOUS</span> SYSTEMS &amp; CYBERNETICS
+      </h1>
+
+      <p class="hero-subtext">
+        CodeXa Agency builds enterprise AI solutions, impenetrable cybersecurity architectures, and cloud-native full stack digital platforms designed for scalable global operations.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="#services" class="btn btn-cyber-primary">
+          Explore Capabilities
+        </a>
+        <a href="https://codxa-agency.online/login" class="btn btn-cyber-outline">
+          Access Intern Portal
+        </a>
+      </div>
+
+      <!-- Hero Showcase Image -->
+      <div class="hero-image-frame">
+        <img src="../images/hero.jpeg" alt="CodeXa Enterprise Platform">
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Metrics Banner -->
+  <div class="container">
+    <div class="stats-strip glass-panel border-neon-glow">
+      <div>
+        <div class="stat-number">50+</div>
+        <div class="stat-label">Intern Engineers</div>
+      </div>
+      <div>
+        <div class="stat-number">99.9%</div>
+        <div class="stat-label">Autonomous Uptime</div>
+      </div>
+      <div>
+        <div class="stat-number">24/7</div>
+        <div class="stat-label">Threat Protection</div>
+      </div>
+      <div>
+        <div class="stat-number">10+</div>
+        <div class="stat-label">AI Dev Models</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Capabilities & Services Section -->
+  <section id="services" style="padding: 40px 0 80px;">
+    <div class="container">
+      <div class="section-title-wrap">
+        <div class="cyber-badge"><span class="badge-dot"></span> Core Domains</div>
+        <h2 class="section-title">Specialized Engineering Capabilities</h2>
+        <p class="section-desc">Tailored technical verticals powering modern automated enterprise infrastructure.</p>
+      </div>
+
+      <div class="grid grid-3">
+        <!-- Card 1 -->
+        <div class="cyber-card">
+          <div class="icon-box">
+            <img src="../icons/shield.svg" alt="Cybersecurity" width="24" height="24">
+          </div>
+          <h3 style="font-size: 18px; margin-bottom: 10px;">Cybersecurity &amp; VAPT</h3>
+          <p style="color: var(--secondary-text); font-size: 14px; line-height: 1.6;">
+            Penetration testing, threat modeling, vulnerability assessments, and defensive protocol enforcement for cloud assets.
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="cyber-card">
+          <div class="icon-box">
+            <img src="../icons/ai-brain.svg" alt="Generative AI" width="24" height="24">
+          </div>
+          <h3 style="font-size: 18px; margin-bottom: 10px;">AI &amp; Autonomous Agents</h3>
+          <p style="color: var(--secondary-text); font-size: 14px; line-height: 1.6;">
+            Deploying LLM agents, Nexa AI tooling, multi-agent orchestrations, and intelligent automation pipelines.
+          </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="cyber-card">
+          <div class="icon-box">
+            <img src="../icons/code.svg" alt="Full Stack" width="24" height="24">
+          </div>
+          <h3 style="font-size: 18px; margin-bottom: 10px;">Full-Stack Development</h3>
+          <p style="color: var(--secondary-text); font-size: 14px; line-height: 1.6;">
+            Modern web applications built with TypeScript, Next.js, high-speed databases, and serverless edge functions.
+          </p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="cyber-card">
+          <div class="icon-box">
+            <img src="../icons/cloud.svg" alt="Cloud Infrastructure" width="24" height="24">
+          </div>
+          <h3 style="font-size: 18px; margin-bottom: 10px;">Cloud &amp; DevOps</h3>
+          <p style="color: var(--secondary-text); font-size: 14px; line-height: 1.6;">
+            Continuous delivery pipelines, container orchestrations, Supabase PostgreSQL, and automated telemetry systems.
+          </p>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="cyber-card">
+          <div class="icon-box">
+            <img src="../icons/terminal.svg" alt="Developer Tooling" width="24" height="24">
+          </div>
+          <h3 style="font-size: 18px; margin-bottom: 10px;">AI Dev Tools Pack</h3>
+          <p style="color: var(--secondary-text); font-size: 14px; line-height: 1.6;">
+            Curated shared developer intelligence pack including Nexa AI, ChatGPT Astra, Gemini Pro, and Fabel Anthropic.
+          </p>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="cyber-card">
+          <div class="icon-box">
+            <img src="../icons/rocket.svg" alt="Mobile Apps" width="24" height="24">
+          </div>
+          <h3 style="font-size: 18px; margin-bottom: 10px;">Mobile Applications</h3>
+          <p style="color: var(--secondary-text); font-size: 14px; line-height: 1.6;">
+            Cross-platform Flutter and React Native experiences built for high performance and low-latency interaction.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Leadership Section -->
+  <section id="team" style="padding: 40px 0 80px;">
+    <div class="container">
+      <div class="section-title-wrap">
+        <div class="cyber-badge"><span class="badge-dot"></span> Executive Board</div>
+        <h2 class="section-title">Leadership Team</h2>
+        <p class="section-desc">Pioneering the vision and operational excellence of CodeXa Agency.</p>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="team-card">
+          <img src="../images/founder.jpeg" alt="CH. Arshad" class="team-avatar">
+          <div class="team-name">CH. Arshad</div>
+          <div class="team-role">Founder</div>
+        </div>
+        <div class="team-card">
+          <img src="../images/co-founder.jpeg" alt="B. Sanjay" class="team-avatar">
+          <div class="team-name">B. Sanjay</div>
+          <div class="team-role">Co-Founder</div>
+        </div>
+        <div class="team-card">
+          <img src="../images/ceo.jpeg" alt="Kishore" class="team-avatar">
+          <div class="team-name">Kishore</div>
+          <div class="team-role">Chief Executive Officer</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-content">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="../images/logo.jpeg" alt="CodeXa Logo" width="24" height="24" style="border-radius: 4px;">
+        <span style="font-family: var(--font-heading); font-weight: 700; color: #FFFFFF;">CODEXA AGENCY</span>
+        <span>&bull; &copy; 2026 All Rights Reserved.</span>
+      </div>
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        Operational &bull; All Systems Active
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
