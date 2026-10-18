@@ -52,14 +52,21 @@ export async function GET(
     if (isAlreadySubmitted) {
       return NextResponse.json(
         {
-          valid: false,
+          valid: true,
           reason: "ALREADY_SUBMITTED",
-          error: "You have already submitted your official ID card photograph.",
-          submittedAt: invitation.submittedAt || latestSubmission?.submittedAt,
+          isAlreadySubmitted: true,
           submissionStatus: latestSubmission?.status || "SUBMITTED",
+          submittedAt: invitation.submittedAt || latestSubmission?.submittedAt,
+          rejectionReason: latestSubmission?.rejectionReason || null,
           intern: {
             fullName: invitation.user.fullName,
             employeeId: invitation.user.employmentProfile?.employeeId || "CXA-INT",
+            department:
+              invitation.user.employmentProfile?.department ||
+              invitation.user.employmentProfile?.academicBranch ||
+              invitation.user.department ||
+              "Engineering",
+            college: invitation.user.employmentProfile?.college || null,
           },
         },
         { status: 200 }

@@ -8,6 +8,7 @@ import {
   calculateExpiryDate,
   buildUploadUrl,
 } from "@/lib/tokens";
+import { getPermanentLinkForIntern } from "@/lib/intern-links";
 import { logAuditEvent } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
@@ -49,51 +50,15 @@ export async function POST(request: NextRequest) {
     let uploadUrl = customUploadUrl;
     let invitationId: string | undefined;
 
-    // If an upload URL was not passed directly, look up active or generate a new one
+    // Use the intern's authoritative permanent direct upload link
     if (!uploadUrl) {
-      let activeInvitation = intern.idCardInvitations[0];
-      if (!activeInvitation) {
-        // Generate new invitation automatically
-        const rawToken = generateSecureToken();
-        const tokenHash = hashToken(rawToken);
-        const expiresAt = calculateExpiryDate(7);
+      uploadUrl =
+        getPermanentLinkForIntern(employeeId) ||
+        getPermanentLinkForIntern(intern.email);
+    }
 
-        activeInvitation = await db.idCardInvitation.create({
-          data: {
-            userId: intern.id,
-            tokenHash,
-            status: "ACTIVE",
-            expiresAt,
-            createdBy: admin.id,
-            createdByName: admin.fullName || admin.username,
-          },
-        });
-        uploadUrl = buildUploadUrl(rawToken);
-      } else {
-        // If an existing token hash exists in DB, we cannot reverse the hash.
-        // Therefore, we generate a fresh link to ensure the email receives a working token:
-        await db.idCardInvitation.update({
-          where: { id: activeInvitation.id },
-          data: { status: "REVOKED", revokedAt: new Date(), revokedBy: admin.id },
-        });
-
-        const rawToken = generateSecureToken();
-        const tokenHash = hashToken(rawToken);
-        const expiresAt = calculateExpiryDate(7);
-
-        const freshInvitation = await db.idCardInvitation.create({
-          data: {
-            userId: intern.id,
-            tokenHash,
-            status: "ACTIVE",
-            expiresAt,
-            createdBy: admin.id,
-            createdByName: admin.fullName || admin.username,
-          },
-        });
-        uploadUrl = buildUploadUrl(rawToken);
-        activeInvitation = freshInvitation;
-      }
+    let activeInvitation = intern.idCardInvitations[0];
+    if (activeInvitation) {
       invitationId = activeInvitation.id;
     }
 

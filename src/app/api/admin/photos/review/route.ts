@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import {
-  generateSecureToken,
-  hashToken,
-  calculateExpiryDate,
-  buildUploadUrl,
-} from "@/lib/tokens";
+import { sendPhotoRejectedEmail } from "@/lib/email";
+import { getPermanentLinkForIntern } from "@/lib/intern-links";
 import { logAuditEvent } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +19,6 @@ export async function POST(request: NextRequest) {
       submissionId,
       action, // "APPROVE" | "REJECT"
       rejectionReason,
-      requestResubmission = false,
     } = body;
 
     if (!submissionId || !action) {
@@ -44,7 +39,12 @@ export async function POST(request: NextRequest) {
       where: { id: submissionId },
       include: {
         user: {
-          include: { employmentProfile: true },
+          include: {
+            employmentProfile: true,
+            idCardInvitations: {
+              orderBy: { createdAt: "desc" },
+            },
+          },
         },
       },
     });
@@ -59,49 +59,59 @@ export async function POST(request: NextRequest) {
       submission.user.employmentProfile?.employeeId ||
       `CXA-INT-${submission.user.id.slice(-4)}`;
 
-    let newUploadUrl: string | null = null;
+    const safeRejectionReason =
+      rejectionReason && rejectionReason.trim().length > 0
+        ? rejectionReason.trim()
+        : "Photograph does not meet official passport framing, background, or lighting standards.";
+
+    // Get the intern's authoritative permanent direct upload link
+    const permanentUploadUrl =
+      getPermanentLinkForIntern(employeeId) ||
+      getPermanentLinkForIntern(submission.user.email) ||
+      "https://id.codxa-agency.online/";
+
+    let emailResult = null;
 
     await db.$transaction(async (tx) => {
-      // Update submission status
+      // 1. Update submission status and rejection reason
       await tx.idCardPhotoSubmission.update({
         where: { id: submissionId },
         data: {
           status: newStatus,
-          rejectionReason: action === "REJECT" ? rejectionReason || "Photo does not meet specifications." : null,
+          rejectionReason: action === "REJECT" ? safeRejectionReason : null,
           reviewedBy: admin.id,
           reviewedByName: admin.fullName || admin.username,
           reviewedAt: now,
         },
       });
 
-      // If rejected and resubmission requested, generate fresh invitation link
-      if (action === "REJECT" && requestResubmission) {
-        // Revoke older active invitations
+      // 2. If rejected, keep the intern's existing invitation active with extended validity
+      // so they can seamlessly resubmit with their SAME permanent link!
+      if (action === "REJECT") {
         await tx.idCardInvitation.updateMany({
-          where: { userId: submission.userId, status: "ACTIVE" },
-          data: { status: "REVOKED", revokedAt: now, revokedBy: admin.id },
-        });
-
-        const rawToken = generateSecureToken();
-        const tokenHash = hashToken(rawToken);
-        const expiresAt = calculateExpiryDate(7);
-
-        await tx.idCardInvitation.create({
+          where: { userId: submission.userId },
           data: {
-            userId: submission.userId,
-            tokenHash,
             status: "ACTIVE",
-            expiresAt,
-            createdBy: admin.id,
-            createdByName: admin.fullName || admin.username,
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            revokedAt: null,
+            revokedBy: null,
           },
         });
-
-        newUploadUrl = buildUploadUrl(rawToken);
       }
     });
 
-    // Audit log
+    // 3. Send email to intern if rejected, containing rejection reason and "Upload Again" button with their same link
+    if (action === "REJECT" && submission.user.email) {
+      emailResult = await sendPhotoRejectedEmail({
+        internName: submission.user.fullName || employeeId,
+        internId: employeeId,
+        recipientEmail: submission.user.email,
+        uploadUrl: permanentUploadUrl,
+        rejectionReason: safeRejectionReason,
+      });
+    }
+
+    // 4. Audit log
     await logAuditEvent({
       actorId: admin.id,
       actorName: admin.fullName || admin.username,
@@ -111,8 +121,9 @@ export async function POST(request: NextRequest) {
       targetInternName: submission.user.fullName,
       details: {
         submissionId,
-        rejectionReason: action === "REJECT" ? rejectionReason : undefined,
-        requestResubmission,
+        rejectionReason: action === "REJECT" ? safeRejectionReason : undefined,
+        uploadUrl: permanentUploadUrl,
+        emailResult,
       },
       req: request,
     });
@@ -121,8 +132,15 @@ export async function POST(request: NextRequest) {
       success: true,
       status: newStatus,
       submissionId,
-      newUploadUrl,
-      message: `Photo ${action === "APPROVE" ? "approved" : "rejected"} successfully.`,
+      uploadUrl: permanentUploadUrl,
+      emailSent: emailResult?.success ?? false,
+      message: `Photo ${action === "APPROVE" ? "approved" : "rejected"} successfully.${
+        action === "REJECT"
+          ? emailResult?.success
+            ? " Rejection email with 'Upload Again' button sent to intern."
+            : " Email notification attempted."
+          : ""
+      }`,
     });
   } catch (err: any) {
     console.error("[POST /api/admin/photos/review Error]", err);

@@ -48,21 +48,7 @@ export async function POST(
       );
     }
 
-    // 1. Check if the intern has already submitted their photograph
-    const latestSubmission = invitation.user.idCardSubmissions[0];
-    const isAlreadySubmitted =
-      invitation.status === "SUBMITTED" ||
-      (latestSubmission && latestSubmission.status !== "REJECTED");
-
-    if (isAlreadySubmitted) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "You have already submitted an ID card photograph. If you need to re-upload, please ask an administrator to reopen your submission.",
-        },
-        { status: 409 }
-      );
-    }
+    // Extract uploaded file from FormData (resubmission allowed on same link)
 
     // 2. Extract uploaded file from FormData
     const formData = await request.formData();

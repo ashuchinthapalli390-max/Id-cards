@@ -16,6 +16,7 @@ import {
   RotateCw,
   Info,
   Lock,
+  Clock,
 } from "lucide-react";
 
 interface InternData {
@@ -35,6 +36,9 @@ export default function InternUploadPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [intern, setIntern] = useState<InternData | null>(null);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<string>("SUBMITTED");
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+  const [hasPriorSubmission, setHasPriorSubmission] = useState(false);
 
   // Upload & Cropper state
   const [selectedImageSrc, setSelectedImageSrc] = useState<string | null>(null);
@@ -69,14 +73,23 @@ export default function InternUploadPage() {
         const data = await res.json();
 
         if (!res.ok || !data.valid) {
-          if (data.reason === "ALREADY_SUBMITTED") {
-            setAlreadySubmitted(true);
-            setIntern(data.intern || null);
-          } else {
-            setValidationError(data.error || "This invitation link is invalid or has expired.");
-          }
+          setValidationError(data.error || "This invitation link is invalid or has expired.");
         } else {
           setIntern(data.intern);
+
+          const status = data.submissionStatus || data.submission?.status || null;
+          const reason = data.rejectionReason || data.submission?.rejectionReason || null;
+
+          if (status === "REJECTED") {
+            setSubmissionStatus("REJECTED");
+            setRejectionReason(reason);
+            setHasPriorSubmission(true);
+            setAlreadySubmitted(false); // Open cropper directly for instant resubmission
+          } else if (data.isAlreadySubmitted || data.reason === "ALREADY_SUBMITTED") {
+            setAlreadySubmitted(true);
+            setSubmissionStatus(status || "SUBMITTED");
+            setHasPriorSubmission(true);
+          }
         }
       } catch {
         setValidationError("Unable to verify link due to a network error. Please try again.");
@@ -241,17 +254,24 @@ export default function InternUploadPage() {
     );
   }
 
-  // Already Submitted Screen
+  // Already Submitted Screen (Allows Resubmitting with Same Link!)
   if (alreadySubmitted) {
+    const isApproved = submissionStatus === "APPROVED";
     return (
       <div className="min-h-screen bg-[#070707] flex flex-col items-center justify-center p-4">
         <div className="cyber-card max-w-md w-full text-center shadow-2xl relative overflow-hidden">
-          <div className="w-16 h-16 rounded-full bg-[rgba(16,185,129,0.15)] border border-[rgba(16,185,129,0.4)] text-[#10B981] mx-auto flex items-center justify-center mb-5 shadow-[0_0_20px_rgba(16,185,129,0.25)]">
-            <CheckCircle2 className="w-9 h-9" />
+          <div
+            className={`w-16 h-16 rounded-full ${
+              isApproved
+                ? "bg-[rgba(16,185,129,0.15)] border-[rgba(16,185,129,0.4)] text-[#10B981]"
+                : "bg-[rgba(255,30,60,0.15)] border-[rgba(255,30,60,0.4)] text-[#FF1E3C]"
+            } border mx-auto flex items-center justify-center mb-5 shadow-[0_0_20px_rgba(255,30,60,0.25)]`}
+          >
+            {isApproved ? <CheckCircle2 className="w-9 h-9" /> : <Clock className="w-9 h-9" />}
           </div>
           <h1 className="text-xl font-heading font-bold text-white mb-2">Photo Already Submitted</h1>
           <p className="text-[#A5A5A5] text-xs sm:text-sm leading-relaxed mb-6">
-            Your official ID card photograph has already been received and securely registered under your CodeXa intern profile.
+            Your official ID card photograph has been received and registered under your CodeXa intern profile.
           </p>
 
           <div className="bg-[#141414] border border-[rgba(217,4,41,0.2)] rounded-xl p-4 text-left text-xs space-y-2 mb-6">
@@ -267,16 +287,39 @@ export default function InternUploadPage() {
             )}
             <div className="flex justify-between">
               <span className="text-[#A5A5A5]">Current Status:</span>
-              <span className="text-[#10B981] font-semibold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#10B981] shadow-[0_0_6px_#10B981]" />
-                Under Administrative Review
+              <span
+                className={`font-semibold flex items-center gap-1.5 ${
+                  isApproved ? "text-[#10B981]" : "text-[#38BDF8]"
+                }`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isApproved
+                      ? "bg-[#10B981] shadow-[0_0_6px_#10B981]"
+                      : "bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]"
+                  }`}
+                />
+                {isApproved ? "Approved • Identity Card Ready" : "Under Administrative Review"}
               </span>
             </div>
           </div>
 
-          <p className="text-[11px] text-[#666666]">
-            If you need to change your photo, please contact your CodeXa Agency administrator or HR mentor to reopen your upload link.
-          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => setAlreadySubmitted(false)}
+              className="btn-cyber w-full py-3 text-xs flex items-center justify-center gap-2"
+            >
+              <Camera className="w-4 h-4" />
+              <span>Upload / Resubmit New Photo</span>
+            </button>
+
+            <button
+              onClick={() => router.push("/")}
+              className="btn-cyber-outline w-full py-2.5 text-xs text-[#A5A5A5]"
+            >
+              Return to Portal Home
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -380,6 +423,43 @@ export default function InternUploadPage() {
             </span>
           </div>
         </div>
+
+        {/* Rejection Alert Banner (if photo was previously rejected) */}
+        {rejectionReason && (
+          <div className="bg-[rgba(255,30,60,0.12)] border border-[rgba(255,30,60,0.4)] rounded-2xl p-4 sm:p-5 mb-6 shadow-[0_0_20px_rgba(255,30,60,0.2)]">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[rgba(255,30,60,0.2)] flex items-center justify-center shrink-0 text-[#FF1E3C] mt-0.5">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <span className="font-heading font-black text-white text-sm sm:text-base tracking-wide block">
+                  Action Required: Previous Photo Not Approved
+                </span>
+                <div className="mt-2 bg-[#12080a] border border-[rgba(255,30,60,0.3)] rounded-xl p-3 text-xs text-[#FF8596]">
+                  <strong className="text-white block mb-0.5">Reason provided by administration:</strong>
+                  {rejectionReason}
+                </div>
+                <p className="text-[11px] text-[#A5A5A5] mt-2 leading-relaxed">
+                  Please use your camera or file upload below to submit a clear, compliant passport-style photograph.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Resubmission Switch Notice (if intern already submitted and chose to resubmit) */}
+        {hasPriorSubmission && !rejectionReason && (
+          <div className="bg-[#141414] border border-[rgba(255,255,255,0.1)] rounded-xl p-3.5 mb-6 flex items-center justify-between gap-3 text-xs">
+            <span className="text-[#A5A5A5]">You are currently resubmitting a replacement photo.</span>
+            <button
+              type="button"
+              onClick={() => setAlreadySubmitted(true)}
+              className="text-[#FF1E3C] hover:underline font-semibold text-xs shrink-0"
+            >
+              Cancel & keep current photo
+            </button>
+          </div>
+        )}
 
         {/* Upload & Crop Section */}
         <div className="cyber-card p-5 sm:p-6 mb-6">

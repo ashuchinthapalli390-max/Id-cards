@@ -485,7 +485,7 @@ export default function PhotoReviewGalleryPage() {
                         onChange={(e) => setRequestResubmission(e.target.checked)}
                         className="rounded accent-rose-500"
                       />
-                      <span>Automatically reissue fresh secure upload link for resubmission</span>
+                      <span>Send email notification with rejection reason & &quot;Upload Again&quot; button (uses permanent link)</span>
                     </label>
                   </div>
 
